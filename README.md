@@ -48,7 +48,7 @@ git clone https://github.com/digitalscream/ipex-fastchat-docker.git
 cd ipex-fastchat-docker
 ```
 
-5. Make some directories for persisting the models, and for the logs (make sure you do this on a disk with plenty of space...you're going to be downloading a lot of models when you start playing with it...):
+5. Make some directories for storing the models, and for the logs (make sure you do this on a disk with plenty of space...you're going to be downloading a lot of models when you start playing with it...):
 ```
 mkdir ~/fastchat
 mkdir ~/fastchat/logs
