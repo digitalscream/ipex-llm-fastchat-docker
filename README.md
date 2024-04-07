@@ -74,6 +74,8 @@ docker run --device /dev/dri -v ~/fastchat:/root/.cache/huggingface -v ~/fastcha
   --model-path TheBloke/laser-dolphin-mixtral-2x7b-dpo-AWQ --load-in-low-bit asym_int4
 ```
 
+3. Play with it. Visit `http://localhost:7860` in your browser and off you go. For extra points, if you're a VS Code user, you can install the Continue extension. The base URL is `http://localhost:8000/v1`, and just set the API key to `EMPTY`.
+
 # What's performance like?
 
 My system is a Ryzen 3600 with 96GB RAM and an Arc A770 16GB. With Mistral 7b, I see around 60 tokens/s. With Mixtral 2x7b AWQ, that drops to 30-40 tokens/s (understandably). If you're seeing ~8-10 tokens/s, then I can almost guarantee that you haven't installed the latest GPU drivers.
