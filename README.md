@@ -1,5 +1,5 @@
-# ipex-fastchat-docker
-Docker image providing fastchat (webui and api) for Intel Arc GPUs.
+# ipex-llm-fastchat-docker
+Docker image providing fastchat (webui and api) for Intel Arc GPUs with IPEX-LLM(https://github.com/intel-analytics/ipex-llm).
 
 # Installation
 
@@ -60,8 +60,8 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 4. Clone this repo.
 ```
-git clone https://github.com/digitalscream/ipex-fastchat-docker.git
-cd ipex-fastchat-docker
+git clone https://github.com/digitalscream/ipex-llm-fastchat-docker.git
+cd ipex-llm-fastchat-docker
 ```
 
 5. Make some directories for storing the models, and for the logs (make sure you do this on a disk with plenty of space...you're going to be downloading a lot of models when you start playing with it...):
@@ -73,20 +73,20 @@ mkdir ~/fastchat/logs
 # Usage
 1. Build (don't forget the period on the end):
 ```
-docker build --tag 'ipex-fastchat-docker' .
+docker build --tag 'ipex-llm-fastchat-docker' .
 ```
 
 2. Run!
 ```
 docker run --device /dev/dri -v ~/fastchat:/root/.cache/huggingface -v ~/fastchat/logs:/logs \
-  -p 7860:7860 -p 8000:8000 ipex-fastchat-docker:latest \
+  -p 7860:7860 -p 8000:8000 ipex-llm-fastchat-docker:latest \
   --model-path mistralai/Mistral-7B-Instruct-v0.2
 ```
 **NOTE**: if you want to use an AWQ-quantised model, you'll need `--load-in-low-bit asym_int4` on the end:
 
 ```
 docker run --device /dev/dri -v ~/fastchat:/root/.cache/huggingface -v ~/fastchat/logs:/logs \
-  -p 7860:7860 -p 8000:8000 ipex-fastchat-docker:latest \
+  -p 7860:7860 -p 8000:8000 ipex-llm-fastchat-docker:latest \
   --model-path TheBloke/laser-dolphin-mixtral-2x7b-dpo-AWQ --load-in-low-bit asym_int4
 ```
 
