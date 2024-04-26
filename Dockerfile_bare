@@ -1,0 +1,121 @@
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ============================================================================
+
+ARG UBUNTU_VERSION=23.10
+
+FROM ubuntu:${UBUNTU_VERSION} AS fastchat-xpu
+
+
+ARG PYTHON=python3.11
+RUN apt update && \
+    apt install -y --no-install-recommends --fix-missing \
+    ca-certificates \
+    gnupg2 \
+    gpg-agent \
+    unzip \
+    wget \
+    build-essential \
+    curl \
+    libgl1 \
+    libglib2.0-0 \
+    libgomp1 \
+    libjemalloc-dev \
+    libjpeg-dev \
+    libpng-dev \
+    git \
+    git-lfs \
+    curl \
+    opencl-headers \
+    clblast-utils \
+    numactl \
+    python3 libpython3.11 python3-pip python3-venv \
+    linux-headers-$(uname -r) \
+    dkms
+    
+
+RUN python3 -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+RUN python3 -m pip install --upgrade pip setuptools
+
+# Force 95% available VRAM size for compute-runtime
+# See https://github.com/intel/compute-runtime/issues/586
+ENV NEOReadDebugKeys=1
+ENV ClDeviceGlobalMemSizeAvailablePercent=95
+
+
+# oneAPI packages
+RUN wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+   | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null && \
+   echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+   | tee /etc/apt/sources.list.d/oneAPI.list
+
+# Intel driver index
+RUN wget -qO - https://repositories.intel.com/gpu/intel-graphics.key | \
+    gpg --dearmor --output /usr/share/keyrings/intel-graphics.gpg && \
+    echo "deb [arch=amd64,i386 signed-by=/usr/share/keyrings/intel-graphics.gpg] https://repositories.intel.com/gpu/ubuntu jammy client" \
+    | tee /etc/apt/sources.list.d/intel-gpu-jammy.list
+
+RUN apt update && apt dist-upgrade -y
+
+RUN apt update && apt install -y gawk libc6-dev udev\
+#    intel-opencl-icd intel-level-zero-gpu level-zero \
+#    intel-media-va-driver-non-free libmfx1 libmfxgen1 libvpl2 \
+#    libegl-mesa0 libegl1-mesa libegl1-mesa-dev libgbm1 libgl1-mesa-dev libgl1-mesa-dri \
+#    libglapi-mesa libgles2-mesa-dev libglx-mesa0 libigdgmm12 libxatracker2 mesa-va-drivers \
+#    mesa-vdpau-drivers mesa-vulkan-drivers va-driver-all vainfo \
+    clinfo \
+    intel-oneapi-common-vars=2024.0.0-49406 \
+		intel-oneapi-compiler-cpp-eclipse-cfg=2024.0.2-49895 \
+		intel-oneapi-compiler-dpcpp-eclipse-cfg=2024.0.2-49895 \
+		intel-oneapi-diagnostics-utility=2024.0.0-49093 \
+		intel-oneapi-compiler-dpcpp-cpp=2024.0.2-49895 \
+		intel-oneapi-mkl=2024.0.0-49656 \
+		intel-oneapi-mkl-devel=2024.0.0-49656 \
+		intel-oneapi-mpi=2021.11.0-49493 \
+		intel-oneapi-mpi-devel=2021.11.0-49493 \
+		intel-oneapi-tbb=2021.11.0-49513  \
+		intel-oneapi-tbb-devel=2021.11.0-49513 \
+		intel-oneapi-ccl=2021.11.2-5  \
+		intel-oneapi-ccl-devel=2021.11.2-5 \
+		intel-oneapi-dnnl-devel=2024.0.0-49521 \
+		intel-oneapi-dnnl=2024.0.0-49521 \
+		intel-oneapi-tcm-1.0=1.0.0-435
+
+#ENV LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so
+RUN pip install --pre --upgrade ipex-llm[cpp] -f https://developer.intel.com/ipex-whl-stable-xpu
+# Disable pip's cache behavior
+ARG PIP_NO_CACHE_DIR=false
+
+
+VOLUME [ "/llm/bin", "/root/.ollama" ]
+
+WORKDIR /llm/
+
+# Install dependencies
+#RUN cd /llm && \
+#    pip install --pre --upgrade ipex-llm[cpp]
+    
+    
+#RUN curl -fsSL https://ollama.com/install.sh | sh
+
+EXPOSE 11423 11423
+
+COPY llama3.model /llm/bin/
+COPY startup.sh /bin/start_ollama.sh
+RUN chmod 755 /bin/start_ollama.sh
+
+ENTRYPOINT [ "/bin/bash", "/bin/start_ollama.sh" ]
+# Run with:
+# docker run -it --name "lj_ollama_latest" --device /dev/dri -p 11434:11434 -v /main_data/docker/ollama_models/:/root/.ollama/ lj_ol_23.10:latest --model-path llama3_local
+
