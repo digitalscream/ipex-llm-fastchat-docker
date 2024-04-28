@@ -40,7 +40,7 @@ while true; do
   else
     echo "Waiting for model..."
   fi
-  sleep 3  # wait before the next attempt\
+  sleep 3  # wait before the next attempt
 done
 
 
