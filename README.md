@@ -1,3 +1,6 @@
+# THIS REPO IS DEPRECATED
+After one of Intel's many changes to their software stack, this approach became obsolete. Head over to their pages to see what they've abandoned this week.
+
 # ipex-llm-fastchat-docker
 Docker image providing fastchat (webui and api) for Intel Arc GPUs with IPEX-LLM(https://github.com/intel-analytics/ipex-llm).
 
